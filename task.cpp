@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 template <typename T>
 class BTS {
@@ -12,49 +13,67 @@ private:
 
     Node* root;
 
-    Node* addNode(Node* root, T value) {
-        if (root == nullptr) {
-            root = new Node;
-            root->value = value;
-            root->count = 1;
-            root->left = root->right = nullptr;
-        } else if (root->value > value) {
-            root->left = addNode(root->left, value);
-        } else if (root->value < value) {
-            root->right = addNode(root->right, value);
+    Node* addNode(Node* node, T value, T parent, bool isLeft) {
+        if (node == nullptr) {
+            if (root == nullptr) {
+                std::cout << "Корень дерева: " << value << std::endl;
+            } else if (isLeft) {
+                std::cout << "Левым потомком узла " << parent << " становится " << value << std::endl;
+            } else {
+                std::cout << "Правым потомком узла " << parent << " становится " << value << std::endl;
+            }
+            node = new Node;
+            node->value = value;
+            node->count = 1;
+            node->left = node->right = nullptr;
+        } else if (node->value > value) {
+            node->left = addNode(node->left, value, node->value, true);
+        } else if (node->value < value) {
+            node->right = addNode(node->right, value, node->value, false);
         } else {
-            root->count++;
+            std::cout << "Узел " << value << " уже существует, count=" << node->count + 1 << std::endl;
+            node->count++;
         }
-        return root;
+        return node;
     }
 
-    void printTree(Node* root) {
-        if (root == nullptr) {
+    Node* searchNode(Node* node, T value) {
+        if (node == nullptr) {
+            return nullptr;
+        }
+
+        if (node->value == value) {
+            return node;
+        }
+
+        if (value < node->value)  {
+            return searchNode(node->left, value);
+        } else {
+            return searchNode(node->right, value);
+        }
+    }
+
+ 
+    void printTree(Node* node, int depth) {
+        if (node == nullptr) {
             return;
         }
-        printTree(root->left);
-        for (int i = 0; i < root->count; i++) {
-            std::cout << root->value << "->";
+        printTree(node->right, depth + 1);
+        std::cout << std::string(depth * 4, ' ') << "[" << node->value << "]";
+
+        if (node->count > 1) {
+            std::cout << " x" << node->count;
         }
-        printTree(root->right);
+
+        std::cout << "\n";
+        printTree(node->left, depth + 1);
     }
 
-    Node* searchNode(Node* root, T value) {
-        if (root == nullptr || root->value == value) {
-            return root;
-        }
-        if (value < root->value) {
-            return searchNode(root->left, value);
-        } else {
-            return searchNode(root->right, value);
-        }
-    }
-
-    void clear(Node *node) {
-        if (node) {
-            clear(node->left);
-            clear(node->right);
-            delete node;
+    void clear(Node* node) {
+        if (node) { 
+            clear(node->left); clear(node->right); 
+            
+            delete node; 
         }
     }
 
@@ -62,37 +81,32 @@ public:
     BTS() : root(nullptr) {}
 
     void add(T value) {
-        root = addNode(root, value);
+        root = addNode(root, value, T{}, false);
     }
 
     bool search(T value) {
         return searchNode(root, value) != nullptr;
     }
 
-    void print() {
-        printTree(root);
-        std::cout << std::endl;
-    }
-
-    ~BTS() {
-        clear(root);
+    ~BTS() { 
+        clear(root); 
     }
 };
 
-int main () {
+int main() {
     BTS<int> tree;
-    
+
+    std::cout << std::endl;
+    std::cout << "Построение дерева:" << std::endl;
     tree.add(10);
     tree.add(5);
     tree.add(15);
     tree.add(11);
     tree.add(3);
 
-    tree.print();
-
-
-    std::cout << "search(5): " << tree.search(5) << std::endl;
-    std::cout << "search(7): " << tree.search(7) << std::endl;
+    // std::cout << "Поиск:" << std::endl;
+    // std::cout << "search(5): " << tree.search(5) << "\n";
+    // std::cout << "search(7): " << tree.search(7) << "\n";
 
     return 0;
 }
